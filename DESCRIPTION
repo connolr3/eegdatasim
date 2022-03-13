@@ -3,7 +3,7 @@ Type: Package
 Title: Tool for EEG signals and ERPs
 Version: 0.1.0
 Author: Rose Connolly 
-Maintainer: Rose Connoll <connolr3@tcd.ie>
+Maintainer: Rose Connolly <connolr3@tcd.ie>
 Description: Performs EEG Data Simulation as by EEGLAB (Matlab) and Signal Averaging.Functioanlity for Identifying and estimating features of ERPs. Estimates Power of Test by Monte Carlo Methods. 
 License: What license is it under?
 Encoding: UTF-8
