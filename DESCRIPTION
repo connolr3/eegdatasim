@@ -1,11 +1,10 @@
 Package: eegdatasim
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Tool for EEG signals and ERPs
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Rose Connolly 
+Maintainer: connolr3@tcd.ie
+Description: Simulates EEG data as by EEGLAB in Matlab. Additonally, averages signals, identifies and estimates features of ERPs. Also calculates Bernoulli Power by Monte Carlo Methods.
+License: None :-0
 Encoding: UTF-8
 LazyData: true
