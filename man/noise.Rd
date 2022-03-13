@@ -12,25 +12,28 @@ noise(x)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{
-%%     ~~Describe \code{x} here~~
-}
+  \item{frames }{Frames in one Trial}
+  \item{Epochs }{Trials conducted in experiment}
+  \item{srate }{Sampling rate in Hz}
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The value of the first parameters describing the number of samples is computed by multiplying the duration of the noise by the sampling frequency, i.e. if we wanted 0.8 seconds of noise, with a srate of 250Hz.... choose frames = 200
+0.8 * 250 = 200
+The function generates a vector containing the samples.
+
+Noise is generated such that its power spectrum matches the power spectrum of human EEG
 }
 \value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
+  \item{signal }{A vector of length frames*Epochs, representing different trials of equal length each }
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 }
 \author{
-%%  ~~who you are~~
+Rose Connolly connolr3@tcd.ie
 }
 \note{
 %%  ~~further notes~~
@@ -42,15 +45,32 @@ noise(x)
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (x)
-{
-  }
-}
+
+#noise <- function(frames, epochs, srate) {
+ # sumsig = 50#number of sinusoids from which each simulated signal is composed of
+  ##signal <- matrix(0,1,epochs*frames)
+  #signal <- replicate(epochs * frames, 0)
+  #for (trial in 1:epochs) {
+   # freq = 0
+  #  signal_range <- c(((trial - 1) * frames + 1):(trial * frames))
+   # for (i in 1:sumsig) {
+    #  freq = freq + (4 * runif(1, 0, 1))
+     # freqamp = meanpower[min (ceiling(freq), 125)] / meanpower[1]#meanpower created up above from read-in file
+      phase <- runif(1, 0, 1) * 2 * pi
+  #    signal[signal_range] <-
+   #     signal[signal_range] + sin(c(1:frames) / srate * 2 * pi * freq + phase) * freqamp
+#
+#    }
+#  }
+#  signal
+#  return(signal)
+#}
+
+#mynoise<-noise(200,10,250)
+#plot(mynoise[1:200])
+
+
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
 % \keyword{ ~kwd1 }
