@@ -1,12 +1,9 @@
 
 #See: https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 
-library(R.matlab)
-library(RandomFields)
-library(optimr)
 
 
-meanpower <- readMat("meanpower.mat")$meanpower
+
 
 #' @export
 plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
@@ -20,6 +17,7 @@ plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
 
 #' @export
 noise <- function(frames, epochs, srate) {
+  meanpower <- readMat("meanpower.mat")$meanpower
   sumsig = 50#number of sinusoids from which each simulated signal is composed of
   #signal <- matrix(0,1,epochs*frames)
   signal <- replicate(epochs * frames, 0)
