@@ -12,9 +12,9 @@ noise(x)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{frames }{Frames in one Trial}
-  \item{Epochs }{Trials conducted in experiment}
-  \item{srate }{Sampling rate in Hz}
+ \item{frames}{number of signal frames per each trial}
+  \item{epochs}{number of simulated trials}
+  \item{srate}{sampling rate of simulated signal in Hz}
 }
 \details{
 The value of the first parameters describing the number of samples is computed by multiplying the duration of the noise by the sampling frequency, i.e. if we wanted 0.8 seconds of noise, with a srate of 250Hz.... choose frames = 200
@@ -26,14 +26,14 @@ Noise is generated such that its power spectrum matches the power spectrum of hu
 \value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
-  \item{signal }{A vector of length frames*Epochs, representing different trials of equal length each }
+  \item{signal }{A vector of length frames*Epochs, representing (epochs) number of trials, each of length (frames), concatenated into one vector.}
 %% ...
 }
 \references{
 https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 }
 \author{
-Rose Connolly connolr3@tcd.ie
+Adapted from Yeung N,Bogacz R, Holroyd C, Nieuwenhuis S, Cohen J
 }
 \note{
 %%  ~~further notes~~
