@@ -1,4 +1,4 @@
 exportPattern("^[[:alpha:]]+")
-import RandomFields
-import optimr
-import R.matlab
+import(RandomFields)
+import(optimr)
+import(R.matlab)
