@@ -260,7 +260,7 @@ min_SSE<-function(data,par,srate,peakcenter){
 }
 
 #' @export
-optimise<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
+optimise_ERP<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
   result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE, data = dat,srate=mysr,peakcenter=pkcntr)
   return(result)
 }
