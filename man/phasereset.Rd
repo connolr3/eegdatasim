@@ -8,29 +8,35 @@ Phase Reset
 Generates EEG, assuming a Phase Reset Thoery Approach
 }
 \usage{
-phasereset(x)
+phasereset (frames, epochs, srate, minfr, maxfr , position, tjitter)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-%%     ~~Describe \code{x} here~~
+  \item{frames}{number of signal frames per each trial}
+  \item{epochs}{number of simulated trials}
+  \item{srate}{sampling rate of simulated signal in Hz}
+   \item{minfr}{minimum frequency of the sinusoid which is being reset}
+  \item{maxfr}{maximum frequency of the sinusoid which is being reset}
+
+
+    \item{postion}{position of the reset [in frames]; default: frames/2 => in the middle}
+  \item{tjitter}{stdev of time jitter of the reset [in frames]; default: 0 => no jitter }
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Function generates signal composed of a single sinusoid whose phase is
+being reset. The frequency of the sinusoid is chosen randomly from a
+specified range [minfr, maxfr]. The initial phase of the sinusoid is chosen randomly.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+\item{signal }{simulated EEG signal; vector: 1 by frames*epochs containing concatenated trials}
 }
 \references{
-%% ~put references to the literature/web site here ~
+https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 }
 \author{
-%%  ~~who you are~~
+Adapted from Yeung N,Bogacz R, Holroyd C, Nieuwenhuis S, Cohen J
 }
 \note{
 %%  ~~further notes~~
@@ -42,15 +48,35 @@ phasereset(x)
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#myphasereset<-phasereset (200, 10, 250, 3, 9 , 115, 0)
+#plot(myphasereset[1:200],type="l")
 
 ## The function is currently defined as
-function (x)
-{
+phasereset <-
+  function (frames,
+            epochs,
+            srate,
+            minfr,
+            maxfr,
+            position = frames / 2,
+            tjitter = 0) {
+    signal <- replicate(epochs * frames, 0)#generating empty wave
+    for (trial in 1:epochs) {
+      wavefr = runif(1, 0, 1) * (maxfr - minfr) + minfr
+      initphase = runif(1, 0, 1) * 2 * pi
+      pos = position + round(runif(1, 0, 1) * tjitter)
+      for (i in 1:frames) {
+        if (i < pos) {
+          phase = i / srate * 2 * pi * wavefr + initphase
+        }
+        else{
+          phase = (i - pos) / srate * 2 * pi * wavefr
+        }
+        signal[(trial - 1) * frames + i] = sin(phase)
+      }
+    }
+    return(signal)
   }
-}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
 % \keyword{ ~kwd1 }

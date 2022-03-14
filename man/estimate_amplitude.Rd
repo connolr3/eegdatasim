@@ -1,19 +1,18 @@
-\name{Estimate Amplitude}
-\alias{Estimate Amplitude}
+\name{estimate_amplitude}
+\alias{estimate_amplitude}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Estimate Amplitude
+estimate_amplitude
 }
 \description{
 Estimates Amplitude of Signal as Max value
 }
 \usage{
-Estimate Amplitude(x)
+estimate_amplitude(averaged_signal)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{
-%%     ~~Describe \code{x} here~~
+  \item{averaged_signal}{Averaged Signal for function to be performed on
 }
 }
 \details{
@@ -22,7 +21,7 @@ Estimate Amplitude(x)
 \value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
+  \item{ }{Maximum value of data serving as estimate for peak amplitude}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
 }
@@ -42,15 +41,15 @@ Estimate Amplitude(x)
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#mysignal<-noise(200,10,250)+peak(200,10,250,7,115)
+#mysignal<-signal_averaging1(mysignal,200,10)
+#estimate_amplitude(mysignal)
 
 ## The function is currently defined as
-function (x)
-{
-  }
+estimate_amplitude<-function(averaged_signal){
+  return(max(averaged_signal))
 }
+
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
 % \keyword{ ~kwd1 }

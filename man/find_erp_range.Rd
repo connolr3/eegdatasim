@@ -8,7 +8,7 @@ find_ERP_range
 Estimates ERP range in a signal
 }
 \usage{
-find_ERP_range(x)
+find_ERP_range(data,cutoff)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -37,11 +37,16 @@ Rose Connolly connolr3@tcd.ie
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#mysignal<-noise(200,10,250)+peak(200,10,250,7,115)
+#av_signal<-signal_averaging1(mysignal,200,10)
+#hats<-est_sig_hat(av_signal)
+#stan_signal<-(av_signal-hats[2])/hats[1]
+#erp_is<-find_ERP_range(stan_signal,cutoff=1.6)
+#mydata<-data.frame(av_signal,col="black")
+#col<-rep("black",200)
+#col[erp_is]="red"
+#plot(av_signal,col=col)
 
-## The function is currently defined as
 
 find_ERP_range<-function(data,cutoff=2){
   index<-which.max( abs(data) )

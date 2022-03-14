@@ -8,6 +8,7 @@ library(optimr)
 
 meanpower <- readMat("meanpower.mat")$meanpower
 
+#' @export
 plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
   plot(data, main = title, type = "l")
   # this if statement and corresponding code is applicable for phase resetting theory only
@@ -17,7 +18,7 @@ plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
   }
 }
 
-
+#' @export
 noise <- function(frames, epochs, srate) {
   sumsig = 50#number of sinusoids from which each simulated signal is composed of
   #signal <- matrix(0,1,epochs*frames)
@@ -31,7 +32,7 @@ noise <- function(frames, epochs, srate) {
       phase <- runif(1, 0, 1) * 2 * pi
       signal[signal_range] <-
         signal[signal_range] + sin(c(1:frames) / srate * 2 * pi * freq + phase) * freqamp
-      
+
     }
   }
   signal
@@ -41,7 +42,7 @@ noise <- function(frames, epochs, srate) {
 
 
 
-
+#' @export
 peak <-
   function(frames,
            epochs,
@@ -55,7 +56,7 @@ peak <-
     signal <- replicate(epochs * frames, 0)
     for (trial in 1:epochs) {
       pos = position + round(runif(1, 0, 1) * tjitter)
-      
+
       for (i in 1:frames) {
         phase = (i - pos) / srate * 2 * pi * peakfr
         if ((is.null(wave) == FALSE) ||
@@ -120,7 +121,7 @@ Makinen1a <- function() {
     matrix(mysignal, nrow = 400, ncol = 30)#reshape into matrix
   my_df <-
     as.data.frame(t(my_new_signal))#convert -> df to use a matlab plot
-  
+
   par(mfrow = c(3, 1))
   #plot1
   matplot(t(my_df), type = "l", ylab = "EEG")
@@ -141,6 +142,7 @@ Makinen1a <- function() {
        type = "l",
        col = "blue",
        xlab = "")
+  par(mfrow = c(1, 1))#reset
 }
 
 
@@ -148,6 +150,8 @@ Makinen1a <- function() {
 
 
 #reshape approach
+
+#' @export
 signal_averaging1<-function(data,frames,epochs){
   m1 <- matrix(data, ncol=frames, byrow=TRUE)
   d1 <- as.data.frame(m1, stringsAsFactors=FALSE)
@@ -156,6 +160,8 @@ signal_averaging1<-function(data,frames,epochs){
 }
 
 #approach by summation
+
+#' @export
 signal_averaging2<-function(data,frames,epochs){
   average_signal<-rep(0,frames)
   range<- c(1:frames)
@@ -176,19 +182,19 @@ estimate_amplitude<-function(averaged_signal){
 
 
 
-
+#' @export
 est_sig_hat_print<-function(data, peak_position=which.max(data),buffer_pc=0.2){
   #data - *averaged* signal we are working with
   #peak_position - center of peak
-  #buffer_pc - % of either side of peak we want to exclude from sig hat estimation .... the higher the more conservative 
-  
+  #buffer_pc - % of either side of peak we want to exclude from sig hat estimation .... the higher the more conservative
+
   lo<-peak_position-(buffer_pc*length(data))
   hi<-peak_position+(buffer_pc*length(data))
   buffer_range<-lo:hi
   reg_data<- data[-buffer_range]
   sig_hat<-sqrt(var(reg_data))
   normhat<-mean(reg_data)
-  
+
   #plotting and printing part.... no actual functionality
   par(mfrow=c(2,1))
   plot(data,main=paste("Identified Noise part of data ",buffer_pc*100,"% either side of peak"))
@@ -198,12 +204,12 @@ est_sig_hat_print<-function(data, peak_position=which.max(data),buffer_pc=0.2){
   print(paste("Mean of data is: ",mean(reg_data)))
   print(paste("Data is of length",length(data)," and we are calculating noise sd & mean based on values outside the range",lo," to ",hi,". This is within a range of ",buffer_pc*100,"% of the peak center at ",peak_position))
   par(mfrow=c(1,1))
-  
+
   return(c(sig_hat,normhat))
 }
 
 
-
+#' @export
 est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
   lo<-peak_position-(buffer_pc*length(data))
   hi<-peak_position+(buffer_pc*length(data))
@@ -214,7 +220,7 @@ est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
   return(c(sig_hat,normhat))
 }
 
-
+#' @export
 find_ERP_range<-function(data,cutoff=2){
   index<-which.max( abs(data) )
   i<-index+1
@@ -226,7 +232,7 @@ find_ERP_range<-function(data,cutoff=2){
   i<-index[1]-1
   while(abs(data[i][1])>cutoff & i<length(data))#goleft
   {
-    
+
     index<-c(i,index)
     i<-i-1
   }
@@ -253,7 +259,7 @@ min_SSE<-function(data,par,srate,peakcenter){
   sum((errs)^2)
 }
 
-
+#' @export
 optimise<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
   result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE, data = dat,srate=mysr,peakcenter=pkcntr)
   return(result)

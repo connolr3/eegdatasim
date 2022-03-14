@@ -12,9 +12,9 @@ est_sig_hats(data,peak_postion,buffer_pc)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{Data on which to estimate from}
+  \item{x}{Data on which to estimate from, should be averaged first}
   \item{peak_position}{Position of center of peak, if known, default is the index of max(data)}
-  \item{buffer_pc}{Percentage of data on each side of peak_postion to exclude from calcualtions. Defaul is 0.3 which is very conservative as excludes 60pcof data total. }
+  \item{buffer_pc}{Percentage of data on each side of peak_postion to exclude from calcualtions. Default is 0.3 which is very conservative as excludes 60pcof data total. }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -22,8 +22,8 @@ est_sig_hats(data,peak_postion,buffer_pc)
 \value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
+  \item{1 }{Sample SD estimate of noise}
+  \item{2 }{Sample mean estimate of noise}
 %% ...
 }
 \references{
@@ -42,9 +42,9 @@ Rose Connolly connolr3@tcd.ie
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-#mysignal<-noise(200,10,250)+3*peak(200,10,250,7,115)
+#mysignal<-noise(200,10,250)+peak(200,10,250,7,115)
+#mysignal<-signal_averaging1(mysignal,200,10)
 #est_sig_hat(mysignal,115,0.15)
-##--	or do  help(data=index)  for the standard data sets.
 
 ## The function is currently defined as
 
