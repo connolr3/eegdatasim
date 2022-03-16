@@ -1,6 +1,9 @@
 
 #See: https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 
+library(R.matlab)
+library(RandomFields)
+library(optimr)
 
 
 
@@ -152,8 +155,8 @@ Makinen1a <- function() {
 #' @export
 signal_averaging1<-function(data,frames,epochs){
   m1 <- matrix(data, ncol=frames, byrow=TRUE)
-  d1 <- as.data.frame(m1, stringsAsFactors=FALSE)
-  summations<-colSums(d1)
+  #d1 <- as.data.frame(m1, stringsAsFactors=FALSE)
+  summations<-colSums(m1)
   average_signal<-summations/epochs
 }
 
@@ -211,24 +214,25 @@ est_sig_hat_print<-function(data, peak_position=which.max(data),buffer_pc=0.2){
 est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
   lo<-peak_position-(buffer_pc*length(data))
   hi<-peak_position+(buffer_pc*length(data))
-  buffer_range<-lo:hi
+  buffer_range<-floor(lo):floor(hi)
   reg_data<- data[-buffer_range]
-  sig_hat<-sqrt(var(reg_data))
+  sig_hat<-sd(reg_data)
   normhat<-mean(reg_data)
   return(c(sig_hat,normhat))
 }
 
 #' @export
 find_ERP_range<-function(data,cutoff=2){
-  index<-which.max( abs(data) )
+  z <- abs(data)
+  index<-which.max( z )
   i<-index+1
-  while(abs(data[i][1])>cutoff & i<length(data))  #goright
+  while(z[i] >cutoff & i<length(z))  #goright
   {
     index<-c(index,i)
     i<-i+1
   }
-  i<-index[1]-1
-  while(abs(data[i][1])>cutoff & i<length(data))#goleft
+  i<-which.max(z)-1
+  while(z[i] > cutoff & i > 0 )#goleft
   {
 
     index<-c(i,index)
@@ -250,8 +254,7 @@ plot_erp<-function(signal,erp_range){
 
 
 
-min_SSE<-function(data,par,srate,peakcenter){
-  #  pred_values<-(1+cos(2*pi*par[1]*(data["x"]-par[2])))/2
+min_SSE<-function(par,data,srate,peakcenter){
   pred_values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
   errs<-data["y"]-par[2]*pred_values
   sum((errs)^2)
@@ -259,11 +262,55 @@ min_SSE<-function(data,par,srate,peakcenter){
 
 #' @export
 optimise_ERP<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
-  result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE, data = dat,srate=mysr,peakcenter=pkcntr)
+  result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE, gr=NULL, method="BFGS", data = dat,srate=mysr,peakcenter=pkcntr)
   return(result)
 }
 
 
+power_determination <-function(accuracy_window,freq,amp,frames,srate,freq_power = TRUE,
+                               amp_power = FALSE,maxtrial = 100,averagingN=4)
+{
+  set.seed("123")
+  my_ps <- numeric(maxtrial)
+  for (N in 1:maxtrial)
+  {
+   # print(N)
+    #use optim to estimate p
+    ones <- 0
+    for (j in 1:averagingN)
+    {
+      #create sample data
+      mysignal <-noise(frames, N, 250) + amp * peak(frames, N, srate, freq)
+
+      #prepare signal: average and standardise
+      my_averaged_signal <- signal_averaging1(mysignal, frames, N)
+      hats <- est_sig_hat(my_averaged_signal, frames / 2)
+      sd <- hats[1]
+      mean <- hats[2]
+      standata <- (my_averaged_signal - mean) / sd
+
+      #estimate peak range
+      mypeak_range <- find_ERP_range(standata, 1.7)
+
+      #prepare data and starting values for optim
+      yis <- my_averaged_signal[mypeak_range]
+      dat <- data.frame(x = mypeak_range, y = yis)
+      start_amp <- max(yis)
+      peak_center_estimate = which(my_averaged_signal == max(my_averaged_signal))
+
+      pars <-optimise_ERP(dat,mysr = srate, starting_amp = start_amp,pkcntr = peak_center_estimate)
+      if (abs(freq - pars$par[1]) <= freq * accuracy_window) {
+        ones=ones+ 1
+      }
+    }
+    if( N%%10 == 0 ) cat("\n done to it ",N)
+    p <- ones / averagingN
+  #  print(p)
+    my_ps[N] <- p
+  }
+  # plot(my_ps,xlab="Number of Trials",ylab="Monte Carlo P Estimation N=40",main="Bernoulli P Estimation... within 10% of True Frequency")
+  return(my_ps)
+}
 
 
 
