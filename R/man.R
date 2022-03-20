@@ -230,6 +230,9 @@ find_ERP_range<-function(data,cutoff=2){
   {
     index<-c(index,i)
     i<-i+1
+    if(z[i]<2 &z[i]>z[i-1]){
+      break
+    }
   }
   i<-which.max(z)-1
   while(z[i] > cutoff & i > 0 )#goleft
@@ -237,6 +240,9 @@ find_ERP_range<-function(data,cutoff=2){
 
     index<-c(i,index)
     i<-i-1
+    if(z[i]<2 &z[i]>z[i+1]){
+      break
+    }
   }
   return(index)
 }
@@ -262,7 +268,7 @@ min_SSE<-function(par,data,srate,peakcenter){
 
 #' @export
 optimise_ERP<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
-  result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE, gr=NULL, method="BFGS", data = dat,srate=mysr,peakcenter=pkcntr)
+  result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE,  data = dat,srate=mysr,peakcenter=pkcntr)
   return(result)
 }
 
