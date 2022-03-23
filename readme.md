@@ -8,5 +8,5 @@ __________________
 To install this package runn:
 devtools::install_github("connolr3/eegdatasim")
 __________________
-There is also a shiny app that acts tutorial to this packages. Please see it hosted on: https://connolr3.shinyapps.io/EEG_Data_Sim_Shiny_App/
+There is also a shiny app that acts tutorial to this packages. Please see it hosted on: https://connolr3.shinyapps.io/EEGDataSim/
 The repo for this Shiny App is: https://github.com/connolr3/eegdatasim_shiny
