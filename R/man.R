@@ -196,31 +196,6 @@ estimate_amplitude<-function(averaged_signal){
   return(max(averaged_signal))
 }
 
-#' @export
-est_sig_hat_print<-function(data, peak_position=which.max(data),buffer_pc=0.2){
-  #data - *averaged* signal we are working with
-  #peak_position - center of peak
-  #buffer_pc - % of either side of peak we want to exclude from sig hat estimation .... the higher the more conservative
-
-  lo<-peak_position-(buffer_pc*length(data))
-  hi<-peak_position+(buffer_pc*length(data))
-  buffer_range<-lo:hi
-  reg_data<- data[-buffer_range]
-  sig_hat<-sd(reg_data)
-  normhat<-mean(reg_data)
-
-  #plotting and printing part.... no actual functionality
-  par(mfrow=c(2,1))
-  plot(data,main=paste("Identified Noise part of data ",buffer_pc*100,"% either side of peak"))
-  abline(v=c(lo,hi),col="red")
-  hist(reg_data,main="Histogram of Noise part of Signal")
-  print(paste("SD of data is: ",sqrt(var(reg_data))))
-  print(paste("Mean of data is: ",mean(reg_data)))
-  print(paste("Data is of length",length(data)," and we are calculating noise sd & mean based on values outside the range",lo," to ",hi,". This is within a range of ",buffer_pc*100,"% of the peak center at ",peak_position))
-  par(mfrow=c(1,1))
-
-  return(c(sig_hat,normhat))
-}
 
 
 #' @export
