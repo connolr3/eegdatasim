@@ -49,21 +49,21 @@ Rose Connolly connolr3@tcd.ie
 
 
 find_ERP_range<-function(data,cutoff=2){
-  index<-which.max( abs(data) )
-  i<-index+1
-  while(abs(data[i][1])>cutoff & i<length(data))  #goright
-  {
-    index<-c(index,i)
-    i<-i+1
-  }
-  i<-index[1]-1
-  while(abs(data[i][1])>cutoff & i<length(data))#goleft
-  {
+  z <- abs(data)
+  z <- z - cutoff
+  index<-which.max( z )
+  
+  zi <- z > 0
+  
+  left_side <- rev( zi[1:index] )
+  t <- which( left_side == FALSE )
+  low <- index - min(t) + 1
+  
+  right_side <- zi[index:length(data)]
+  t <- which( right_side == FALSE )
+  high <- index + min(t) - 1
 
-    index<-c(i,index)
-    i<-i-1
-  }
-  return(index)
+  return( low:high )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

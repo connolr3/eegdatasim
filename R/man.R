@@ -1,11 +1,9 @@
 
 #See: https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 
-library(R.matlab)
-library(RandomFields)
-library(optimr)
 
-
+usethis::use_package("R.matlab")
+usethis::use_package("optimr")
 
 
 #' @export
@@ -19,22 +17,48 @@ plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
 }
 
 #' @export
-noise <- function(frames, epochs, srate) {
-  meanpower <- readMat("meanpower.mat")$meanpower
+fill_signals<-function(mysignal,frames, epochs, srate,meanpower){
+  sumsig = 50#number of sinusoids from which each simulated signal is composed of
+  signal <- matrix( rep(1:frames, sumsig), nrow=sumsig, byrow=TRUE )
+  freq <- 4 * runif( sumsig, 0, 1)#generate random frequency for each sin
+  freq <- cumsum(freq)#apply cumilitive function to make each sin have a higher frequency than the last
+  freqamp <- meanpower[ pmin( ceiling(freq), rep(125,sumsig)) ] / meanpower[1]#generate ampltidue based on meanpower
+  phase <- 2 * pi * runif(sumsig, 0 , 1)#generate random phase for each sin
+  signal <- sin( signal * freq * ( 2 * pi / srate ) + phase ) * freqamp#create 50 sins, with consecutively higher freq for each sin 
+  mysignal<-colSums( signal ) 
+  
+}
+
+noise <- function(frames, epochs, srate, meanpower = NULL) {
+  if (frames < 0) stop("frames cannot be less than 0")
+  if (srate < 0) stop("srate cannot be less than 0")
+  if (epochs < 0) stop("epochs cannot be less than 0")
+  if( is.null(meanpower)) meanpower <- as.vector(R.matlab::readMat("meanpower.mat")$meanpower)
+  signals<-matrix(0,frames,epochs)
+  signals<-apply(signals,2,fill_signals,meanpower=meanpower,frames=frames,epochs=epochs,srate=srate)
+  return(as.vector(signals))
+}
+
+
+noise_y <- function(frames, epochs, srate, meanpower = NULL) {
+  if (frames < 0) stop("frames cannot be less than 0")
+  if (srate < 0) stop("srate cannot be less than 0")
+  if (epochs < 0) stop("epochs cannot be less than 0")
+  if( is.null(meanpower)) meanpower <- as.vector(R.matlab::readMat("meanpower.mat")$meanpower)
   sumsig = 50#number of sinusoids from which each simulated signal is composed of
   #signal <- matrix(0,1,epochs*frames)
   signal <- replicate(epochs * frames, 0)
+  signaln<-array(rep(0, sumsig*epochs*frames), c(sumsig, epochs, frames))
   for (trial in 1:epochs) {
-    freq = 0
-    signal_range <- c(((trial - 1) * frames + 1):(trial * frames))
-    for (i in 1:sumsig) {
-      freq = freq + (4 * runif(1, 0, 1))
-      freqamp = meanpower[min (ceiling(freq), 125)] / meanpower[1]#meanpower created up above from read-in file
-      phase <- runif(1, 0, 1) * 2 * pi
-      signal[signal_range] <-
-        signal[signal_range] + sin(c(1:frames) / srate * 2 * pi * freq + phase) * freqamp
-
-    }
+    #freq = 0
+    signal_range <- ((trial - 1) * frames + 1):(trial * frames)
+    S <- matrix( rep(1:frames, sumsig), nrow=sumsig, byrow=TRUE )
+    f <- 4 * runif( sumsig, 0, 1)
+    f <- cumsum(f)
+    fa <- meanpower[ pmin( ceiling(f), rep(125,sumsig)) ] / meanpower[1]
+    phi <- 2 * pi * runif(sumsig, 0 , 1)
+    S <- sin( S * f * ( 2 * pi / srate ) + phi ) * fa
+    signal[ signal_range ] <- colSums( S )    
   }
   signal
   return(signal)
@@ -43,15 +67,13 @@ noise <- function(frames, epochs, srate) {
 
 
 
+
+
 #' @export
-peak <-
-  function(frames,
-           epochs,
-           srate,
-           peakfr,
-           position = frames / 2,
-           tjitter = 0,
-           wave = NULL) {
+peak <- function(frames, epochs,srate,peakfr,position = frames / 2,tjitter = 0,wave = NULL) {
+  if (frames < 0) stop("frames cannot be less than 0")
+  if (srate < 0) stop("srate cannot be less than 0")
+  if (epochs < 0) stop("epochs cannot be less than 0")
     mypeak <- c(1, 5, 4, 9, 0)
     mypeak
     signal <- replicate(epochs * frames, 0)
@@ -150,38 +172,29 @@ Makinen1a <- function() {
 
 
 
-#reshape approach
-
-#' @export
-signal_averaging1<-function(data,frames,epochs){
-  m1 <- matrix(data, ncol=frames, byrow=TRUE)
-  #d1 <- as.data.frame(m1, stringsAsFactors=FALSE)
-  summations<-colSums(m1)
-  average_signal<-summations/epochs
-}
 
 #approach by summation
 
 #' @export
-signal_averaging2<-function(data,frames,epochs){
+signal_averaging_x<-function(data,frames,epochs){
   average_signal<-rep(0,frames)
-  range<- c(1:frames)
-  for (i in c(1:epochs)) {
+  range <- c(1:frames)
+  for (i in 1:epochs) {
     average_signal<-average_signal+data[range]
     range<-range+frames
   }
   return(average_signal/epochs)
 }
 
+signal_averaging<-function(data,frames,epochs){
+  a <- matrix( data, nrow=frames, ncol=epochs )
+  return(rowMeans(a))
+}
 
 #' @export
 estimate_amplitude<-function(averaged_signal){
   return(max(averaged_signal))
 }
-
-
-
-
 
 #' @export
 est_sig_hat_print<-function(data, peak_position=which.max(data),buffer_pc=0.2){
@@ -193,7 +206,7 @@ est_sig_hat_print<-function(data, peak_position=which.max(data),buffer_pc=0.2){
   hi<-peak_position+(buffer_pc*length(data))
   buffer_range<-lo:hi
   reg_data<- data[-buffer_range]
-  sig_hat<-sqrt(var(reg_data))
+  sig_hat<-sd(reg_data)
   normhat<-mean(reg_data)
 
   #plotting and printing part.... no actual functionality
@@ -224,30 +237,21 @@ est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
 #' @export
 find_ERP_range<-function(data,cutoff=2){
   z <- abs(data)
+  z <- z - cutoff
   index<-which.max( z )
-  i<-index+1
-  while(z[i] >cutoff & i<length(z))  #goright
-  {
-    index<-c(index,i)
-    i<-i+1
-    if(z[i]<2 &z[i]>z[i-1]){
-      break
-    }
-  }
-  i<-which.max(z)-1
-  while(z[i] > cutoff & i > 0 )#goleft
-  {
+  
+  zi <- z > 0
+  
+  left_side <- rev( zi[1:index] )
+  t <- which( left_side == FALSE )
+  low <- index - min(t) + 1
+  
+  right_side <- zi[index:length(data)]
+  t <- which( right_side == FALSE )
+  high <- index + min(t) - 1
 
-    index<-c(i,index)
-    i<-i-1
-    if(z[i]<2 &z[i]>z[i+1]){
-      break
-    }
-  }
-  return(index)
+  return( low:high )
 }
-
-
 
 #plots signal with erp highlighted in red
 plot_erp<-function(signal,erp_range){
@@ -258,17 +262,37 @@ plot_erp<-function(signal,erp_range){
   plot(x_values,signal,col=point_colour,main="Signal with ERP identified")
 }
 
+gr_min_SSE <- function(par,x,y,srate,peakcenter){
+  u <- ((x-peakcenter)*2*pi)/srate
+  z <- cos( u * par[1] )
+  alphaest <- sum( z * y) / sum(z*z)
+  r <- x - alphaest * z
+  v <- alphaest * -sin( u * par[1] ) * u
+  return( 2 * sum( r * v ) )
+}
 
+gr_min_SSE2 <- function(par,x,y,srate,peakcenter){
+  u <- ((x-peakcenter)*2*pi)/srate
+  z <- cos( u * par[1] )
+  alphaest <- sum( z * y) / sum(z*z)
+  ans<-4*pi*alphaest*(x-peakcenter)*(y-alphaest*z)*(sin(u * par[1]))
+  return(sum(ans/srate))
+}
 
-min_SSE<-function(par,data,srate,peakcenter){
-  pred_values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
-  errs<-data["y"]-par[2]*pred_values
-  sum((errs)^2)
+min_SSE<-function(par,x,y,srate,peakcenter){
+  z <- cos(((x-peakcenter)*2*pi*par[1])/srate)
+  alphaest <- sum(z * y) / sum(z*z)
+  #pred_values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
+  errs<- y - alphaest * z #pred_values
+  sum(errs^2)
 }
 
 #' @export
-optimise_ERP<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
-  result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE,  data = dat,srate=mysr,peakcenter=pkcntr)
+optimise_ERP<-function(x,y,mysr,pkcntr){
+  result <- optim(par = 1, fn = min_SSE, gr=gr_min_SSE2, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
+  z <- cos(((x-pkcntr)*2*pi*result$par[1])/mysr )
+  alphaest <- sum(z * y) / sum(z*z)
+  result$par <- c((result$par),alphaest)
   return(result)
 }
 
@@ -276,48 +300,78 @@ optimise_ERP<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
 power_determination <-function(accuracy_window,freq,amp,frames,srate,freq_power = TRUE,
                                amp_power = FALSE,maxtrial = 100,averagingN=4)
 {
+  meanpower<- R.matlab::readMat("meanpower.mat")$meanpower
+  meanpower <- as.vector(meanpower)
   set.seed("123")
-  my_ps <- numeric(maxtrial)
+  my_ps <- numeric()
   for (N in 1:maxtrial)
   {
-   # print(N)
-    #use optim to estimate p
     ones <- 0
     for (j in 1:averagingN)
     {
       #create sample data
-      mysignal <-noise(frames, N, 250) + amp * peak(frames, N, srate, freq)
-
+      mysignal <-noise(frames, N, 250,meanpower) + amp * peak(frames, N, srate, freq)
+      
       #prepare signal: average and standardise
-      my_averaged_signal <- signal_averaging1(mysignal, frames, N)
+      my_averaged_signal <- signal_averaging(mysignal, frames, N)
       hats <- est_sig_hat(my_averaged_signal, frames / 2)
-      sd <- hats[1]
-      mean <- hats[2]
-      standata <- (my_averaged_signal - mean) / sd
-
+      standata <- (my_averaged_signal - hats[2]) / hats[1]
+      
       #estimate peak range
       mypeak_range <- find_ERP_range(standata, 1.7)
-
+      
       #prepare data and starting values for optim
       yis <- my_averaged_signal[mypeak_range]
-      dat <- data.frame(x = mypeak_range, y = yis)
-      start_amp <- max(yis)
-      peak_center_estimate = which(my_averaged_signal == max(my_averaged_signal))
-
-      pars <-optimise_ERP(dat,mysr = srate, starting_amp = start_amp,pkcntr = peak_center_estimate)
+      peak_center_estimate = which.max(my_averaged_signal)
+      
+      pars <-optimise_ERP(mypeak_range, yis ,mysr = srate,pkcntr = peak_center_estimate)
       if (abs(freq - pars$par[1]) <= freq * accuracy_window) {
         ones=ones+ 1
       }
+      
     }
-    if( N%%10 == 0 ) cat("\n done to it ",N)
+    cat("\n Completed (no. trials): ",N)
     p <- ones / averagingN
-  #  print(p)
-    my_ps[N] <- p
+    my_ps[N]<-p
   }
-  # plot(my_ps,xlab="Number of Trials",ylab="Monte Carlo P Estimation N=40",main="Bernoulli P Estimation... within 10% of True Frequency")
   return(my_ps)
 }
 
 
-
-
+power_determination_amp <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 100,averagingN=4)
+{
+  set.seed("123")
+  my_ps <- c()
+  meanpower <- R.matlab::readMat("meanpower.mat")$meanpower
+  for (N in 1:maxtrial)
+  {
+    ones <- 0
+    for (j in 1:averagingN)
+    {
+      #create sample data
+      mysignal <-noise(frames, N, 250, meanpower=meanpower) + amp * peak(frames, N, srate, freq)
+      
+      #prepare signal: average and standardise
+      my_averaged_signal <- signal_averaging(mysignal, frames, N)
+      hats <- est_sig_hat(my_averaged_signal, frames / 2)
+      standata <- (my_averaged_signal - hats[2]) / hats[1]
+      
+      #estimate peak range
+      mypeak_range <- find_ERP_range(standata, 1.7)
+      
+      #prepare data and starting values for optim
+      yis <- my_averaged_signal[mypeak_range]
+      peak_center_estimate = which(my_averaged_signal == max(my_averaged_signal))
+      
+      pars <-optimise_ERP(mypeak_range, yis ,mysr = srate,pkcntr = peak_center_estimate)
+      if (abs(amp - pars$par[2]) <= amp * accuracy_window) {
+        ones=ones+ 1
+      }
+      
+    }
+    cat("\n Completed (no. trials): ",N)
+    p <- ones / averagingN
+    my_ps<-c(my_ps,p)
+  }
+  return(my_ps)
+}
