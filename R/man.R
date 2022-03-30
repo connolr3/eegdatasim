@@ -1,10 +1,6 @@
-
 #See: https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
-
-
 usethis::use_package("R.matlab")
 usethis::use_package("optimr")
-
 
 #' @export
 plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
@@ -29,6 +25,7 @@ fill_signals<-function(mysignal,frames, epochs, srate,meanpower){
   
 }
 
+#' @export
 noise <- function(frames, epochs, srate, meanpower = NULL) {
   if (frames < 0) stop("frames cannot be less than 0")
   if (srate < 0) stop("srate cannot be less than 0")
@@ -39,52 +36,18 @@ noise <- function(frames, epochs, srate, meanpower = NULL) {
   return(as.vector(signals))
 }
 
-
-noise_y <- function(frames, epochs, srate, meanpower = NULL) {
-  if (frames < 0) stop("frames cannot be less than 0")
-  if (srate < 0) stop("srate cannot be less than 0")
-  if (epochs < 0) stop("epochs cannot be less than 0")
-  if( is.null(meanpower)) meanpower <- as.vector(R.matlab::readMat("meanpower.mat")$meanpower)
-  sumsig = 50#number of sinusoids from which each simulated signal is composed of
-  #signal <- matrix(0,1,epochs*frames)
-  signal <- replicate(epochs * frames, 0)
-  signaln<-array(rep(0, sumsig*epochs*frames), c(sumsig, epochs, frames))
-  for (trial in 1:epochs) {
-    #freq = 0
-    signal_range <- ((trial - 1) * frames + 1):(trial * frames)
-    S <- matrix( rep(1:frames, sumsig), nrow=sumsig, byrow=TRUE )
-    f <- 4 * runif( sumsig, 0, 1)
-    f <- cumsum(f)
-    fa <- meanpower[ pmin( ceiling(f), rep(125,sumsig)) ] / meanpower[1]
-    phi <- 2 * pi * runif(sumsig, 0 , 1)
-    S <- sin( S * f * ( 2 * pi / srate ) + phi ) * fa
-    signal[ signal_range ] <- colSums( S )    
-  }
-  signal
-  return(signal)
-}
-
-
-
-
-
-
 #' @export
 peak <- function(frames, epochs,srate,peakfr,position = frames / 2,tjitter = 0,wave = NULL) {
   if (frames < 0) stop("frames cannot be less than 0")
   if (srate < 0) stop("srate cannot be less than 0")
   if (epochs < 0) stop("epochs cannot be less than 0")
-    mypeak <- c(1, 5, 4, 9, 0)
-    mypeak
-    signal <- replicate(epochs * frames, 0)
-    for (trial in 1:epochs) {
-      pos = position + round(runif(1, 0, 1) * tjitter)
-
+  mypeak <- c(1, 5, 4, 9, 0)
+  signal <- replicate(epochs * frames, 0)
+  for (trial in 1:epochs) {
+    pos = position + round(runif(1, 0, 1) * tjitter)
       for (i in 1:frames) {
         phase = (i - pos) / srate * 2 * pi * peakfr
-        if ((is.null(wave) == FALSE) ||
-            (phase < pi / 2 &&
-             phase > -pi / 2)) {
+        if ((is.null(wave) == FALSE) ||(phase < pi / 2 && phase > -pi / 2)) {
           #if wave | (phase < pi/2 & phase > -pi/2)
           signal[(trial - 1) * frames + i] = cos(phase)
         }
@@ -95,26 +58,16 @@ peak <- function(frames, epochs,srate,peakfr,position = frames / 2,tjitter = 0,w
 
 
 #' @export
-phasereset <-
-  function (frames,
-            epochs,
-            srate,
-            minfr,
-            maxfr,
-            position = frames / 2,
-            tjitter = 0) {
+phasereset <- function (frames,epochs,srate,minfr,maxfr,position = frames / 2,tjitter = 0) 
+  {
     signal <- replicate(epochs * frames, 0)#generating empty wave
     for (trial in 1:epochs) {
       wavefr = runif(1, 0, 1) * (maxfr - minfr) + minfr
       initphase = runif(1, 0, 1) * 2 * pi
       pos = position + round(runif(1, 0, 1) * tjitter)
       for (i in 1:frames) {
-        if (i < pos) {
-          phase = i / srate * 2 * pi * wavefr + initphase
-        }
-        else{
-          phase = (i - pos) / srate * 2 * pi * wavefr
-        }
+        if (i < pos) phase = i / srate * 2 * pi * wavefr + initphase
+        else phase = (i - pos) / srate * 2 * pi * wavefr
         signal[(trial - 1) * frames + i] = sin(phase)
       }
     }
@@ -125,11 +78,8 @@ phasereset <-
 #' @export
 Makinen <- function(frames, epochs, srate, position = frames / 2) {
   signal <- replicate(epochs * frames, 0)#generating empty wave
-  #print(length(signal))
-  for (i in 1:4) {
-    #repeat for 4 sinusoids
+  for (i in 1:4) {#repeat for 4 sinusoids
     new_signal <- phasereset(frames, epochs, srate, 4, 16, position)
-    #print(length(new_signal))
     signal = signal + new_signal#add new sin to summation
   }
   return(signal)
@@ -140,52 +90,19 @@ Makinen <- function(frames, epochs, srate, position = frames / 2) {
 Makinen1a <- function() {
   trials = 30
   mysignal = Makinen (400, trials, 1000, 175)#30 trials
-  my_new_signal <-
-    matrix(mysignal, nrow = 400, ncol = 30)#reshape into matrix
-  my_df <-
-    as.data.frame(t(my_new_signal))#convert -> df to use a matlab plot
+  my_new_signal <- matrix(mysignal, nrow = 400, ncol = 30)#reshape into matrix
+  my_df <-as.data.frame(t(my_new_signal))#convert -> df to use a matlab plot
 
   par(mfrow = c(3, 1))
-  #plot1
   matplot(t(my_df), type = "l", ylab = "EEG")
-  #plot2
   signalmean <- lapply(my_df[1:400], FUN = mean)
-  plot(
-    c(1:400),
-    signalmean,
-    type = "l",
-    col = "blue",
-    xlab = "",
-    ylab = "ERP"
-  )
-  #plot3
+  plot( c(1:400),signalmean,type = "l",col = "blue",xlab = "",ylab = "ERP")
   variance <- lapply(my_df[1:400], FUN = var)
-  plot(c(1:400),
-       variance,
-       type = "l",
-       col = "blue",
-       xlab = "")
-  par(mfrow = c(1, 1))#reset
+  plot(c(1:400),variance,type = "l",col = "blue",xlab = "")
+  par(mfrow = c(1, 1))#reset par to normal
 }
-
-
-
-
-
-
-#approach by summation
 
 #' @export
-signal_averaging_x<-function(data,frames,epochs){
-  average_signal<-rep(0,frames)
-  range <- c(1:frames)
-  for (i in 1:epochs) {
-    average_signal<-average_signal+data[range]
-    range<-range+frames
-  }
-  return(average_signal/epochs)
-}
-
 signal_averaging<-function(data,frames,epochs){
   a <- matrix( data, nrow=frames, ncol=epochs )
   return(rowMeans(a))
@@ -195,8 +112,6 @@ signal_averaging<-function(data,frames,epochs){
 estimate_amplitude<-function(averaged_signal){
   return(max(averaged_signal))
 }
-
-
 
 #' @export
 est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
@@ -271,7 +186,7 @@ optimise_ERP<-function(x,y,mysr,pkcntr){
   return(result)
 }
 
-
+#' @export
 power_determination <-function(accuracy_window,freq,amp,frames,srate,freq_power = TRUE,
                                amp_power = FALSE,maxtrial = 100,averagingN=4)
 {
@@ -312,7 +227,7 @@ power_determination <-function(accuracy_window,freq,amp,frames,srate,freq_power 
   return(my_ps)
 }
 
-
+#' @export
 power_determination_amp <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 100,averagingN=4)
 {
   set.seed("123")
