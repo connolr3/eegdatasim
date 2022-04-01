@@ -1,6 +1,5 @@
 #See: https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator
 usethis::use_package("R.matlab")
-usethis::use_package("optimr")
 
 #' @export
 plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
