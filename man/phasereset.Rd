@@ -20,7 +20,6 @@ phasereset (frames, epochs, srate, minfr, maxfr , position, tjitter)
     \item{postion}{position of the reset [in frames]; default: frames/2 => in the middle}
   \item{tjitter}{stdev of time jitter of the reset [in frames]; default: 0 => no jitter }
 }
-}
 \details{
 Function generates signal composed of a single sinusoid whose phase is
 being reset. The frequency of the sinusoid is chosen randomly from a
