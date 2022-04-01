@@ -102,3 +102,4 @@ power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 
 % \concept{ ~cpt1 }
 % \concept{ ~cpt2 }
 % Use only one concept per line.
+}

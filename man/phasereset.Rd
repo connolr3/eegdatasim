@@ -12,14 +12,11 @@ phasereset (frames, epochs, srate, minfr, maxfr , position, tjitter)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{
   \item{frames}{number of signal frames per each trial}
   \item{epochs}{number of simulated trials}
   \item{srate}{sampling rate of simulated signal in Hz}
    \item{minfr}{minimum frequency of the sinusoid which is being reset}
   \item{maxfr}{maximum frequency of the sinusoid which is being reset}
-
-
     \item{postion}{position of the reset [in frames]; default: frames/2 => in the middle}
   \item{tjitter}{stdev of time jitter of the reset [in frames]; default: 0 => no jitter }
 }
@@ -83,6 +80,7 @@ phasereset <-
 % \keyword{ ~kwd2 }
 % Use only one keyword per line.
 % For non-standard keywords, use \concept instead of \keyword:
+}
 % \concept{ ~cpt1 }
 % \concept{ ~cpt2 }
 % Use only one concept per line.

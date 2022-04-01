@@ -14,7 +14,7 @@ plot_signal(data,mark,title)
 \arguments{
   \item{data}{Vector to Plot}
   \item{mark}{Optional int, add horixontal line marker}
-  \item{title}{Optional string, add title}}
+  \item{title}{Optional string, add title}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -64,3 +64,4 @@ plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
 % \concept{ ~cpt1 }
 % \concept{ ~cpt2 }
 % Use only one concept per line.
+}

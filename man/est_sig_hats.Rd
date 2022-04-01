@@ -67,3 +67,4 @@ est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
 % \concept{ ~cpt1 }
 % \concept{ ~cpt2 }
 % Use only one concept per line.
+}
