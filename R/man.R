@@ -30,8 +30,9 @@ noise <- function(frames, epochs, srate, meanpower = NULL) {
   if (srate < 0) stop("srate cannot be less than 0")
   if (epochs < 0) stop("epochs cannot be less than 0")
   if( is.null(meanpower)){
-    path<-file.path("R","meanpower.mat")
-    meanpower <- as.vector(R.matlab::readMat(path)$meanpower)
+  #  path<-file.path("R","meanpower.mat")
+  #  meanpower <- as.vector(R.matlab::readMat(path)$meanpower)
+    meanpower <- as.vector(R.matlab::readMat("meanpower.mat")$meanpower)
   } 
   signals<-matrix(0,frames,epochs)
   signals<-apply(signals,2,fill_signals,meanpower=meanpower,frames=frames,epochs=epochs,srate=srate)
@@ -186,7 +187,7 @@ power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 
   set.seed("123")
   my_frequency_ps <- numeric(length=maxtrial)
   my_amplitude_ps <- numeric(length=maxtrial)
-  meanpower <- R.matlab::readMat("R/meanpower.mat")$meanpower
+  meanpower <- R.matlab::readMat("meanpower.mat")$meanpower
   for (N in 1:maxtrial)
   {
     freq_ones <- 0
