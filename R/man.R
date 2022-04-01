@@ -29,7 +29,10 @@ noise <- function(frames, epochs, srate, meanpower = NULL) {
   if (frames < 0) stop("frames cannot be less than 0")
   if (srate < 0) stop("srate cannot be less than 0")
   if (epochs < 0) stop("epochs cannot be less than 0")
-  if( is.null(meanpower)) meanpower <- as.vector(R.matlab::readMat("meanpower.mat")$meanpower)
+  if( is.null(meanpower)){
+    path<-file.path("R","meanpower.mat")
+    meanpower <- as.vector(R.matlab::readMat(path)$meanpower)
+  } 
   signals<-matrix(0,frames,epochs)
   signals<-apply(signals,2,fill_signals,meanpower=meanpower,frames=frames,epochs=epochs,srate=srate)
   return(as.vector(signals))
