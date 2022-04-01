@@ -85,3 +85,4 @@ noise <- function(frames, epochs, srate, meanpower = NULL) {
 % \concept{ ~cpt1 }
 % \concept{ ~cpt2 }
 % Use only one concept per line.
+}
