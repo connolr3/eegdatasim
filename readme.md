@@ -1,8 +1,6 @@
 EEGDataSim - R version of https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator + additional functionality
 __________________
 The following packages are required for eegdatasim;
-install.packages("optimr")
-install.packages('RandomFields')
 install.packages("R.matlab")
 __________________
 To install this package runn:

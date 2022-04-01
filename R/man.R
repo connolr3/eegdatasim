@@ -179,7 +179,7 @@ optimise_ERP<-function(x,y,mysr,pkcntr){
 }
 
 #' @export
-power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 100,averagingN=4)
+power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 40,averagingN=100)
 {
   set.seed("123")
   my_frequency_ps <- numeric(length=maxtrial)
@@ -220,5 +220,5 @@ power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 
     my_amplitude_ps[N]<-amp_p
   }
   results<-data.frame(my_frequency_ps,my_amplitude_ps)
-  return(data.frame(results))
+  return((results))
 }
