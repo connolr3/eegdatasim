@@ -12,7 +12,7 @@ plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
   }
 }
 
-#' @export
+
 fill_signals<-function(mysignal,frames, epochs, srate,meanpower){
   sumsig = 50#number of sinusoids from which each simulated signal is composed of
   signal <- matrix( rep(1:frames, sumsig), nrow=sumsig, byrow=TRUE )
@@ -144,6 +144,7 @@ find_ERP_range<-function(data,cutoff=2){
 }
 
 #plots signal with erp highlighted in red
+#' @export
 plot_erp<-function(signal,erp_range){
   x_values<-c(1:length(signal))
   point_colour<-replicate(length(signal),"black")
@@ -153,15 +154,6 @@ plot_erp<-function(signal,erp_range){
 }
 
 gr_min_SSE <- function(par,x,y,srate,peakcenter){
-  u <- ((x-peakcenter)*2*pi)/srate
-  z <- cos( u * par[1] )
-  alphaest <- sum( z * y) / sum(z*z)
-  r <- x - alphaest * z
-  v <- alphaest * -sin( u * par[1] ) * u
-  return( 2 * sum( r * v ) )
-}
-
-gr_min_SSE2 <- function(par,x,y,srate,peakcenter){
   u <- ((x-peakcenter)*2*pi)/srate
   z <- cos( u * par[1] )
   alphaest <- sum( z * y) / sum(z*z)
@@ -179,7 +171,7 @@ min_SSE<-function(par,x,y,srate,peakcenter){
 
 #' @export
 optimise_ERP<-function(x,y,mysr,pkcntr){
-  result <- optim(par = 1, fn = min_SSE, gr=gr_min_SSE2, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
+  result <- optim(par = 1, fn = min_SSE, gr=gr_min_SSE, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
   z <- cos(((x-pkcntr)*2*pi*result$par[1])/mysr )
   alphaest <- sum(z * y) / sum(z*z)
   result$par <- c((result$par),alphaest)
@@ -187,55 +179,16 @@ optimise_ERP<-function(x,y,mysr,pkcntr){
 }
 
 #' @export
-power_determination <-function(accuracy_window,freq,amp,frames,srate,freq_power = TRUE,
-                               amp_power = FALSE,maxtrial = 100,averagingN=4)
-{
-  meanpower<- R.matlab::readMat("meanpower.mat")$meanpower
-  meanpower <- as.vector(meanpower)
-  set.seed("123")
-  my_ps <- numeric()
-  for (N in 1:maxtrial)
-  {
-    ones <- 0
-    for (j in 1:averagingN)
-    {
-      #create sample data
-      mysignal <-noise(frames, N, 250,meanpower) + amp * peak(frames, N, srate, freq)
-      
-      #prepare signal: average and standardise
-      my_averaged_signal <- signal_averaging(mysignal, frames, N)
-      hats <- est_sig_hat(my_averaged_signal, frames / 2)
-      standata <- (my_averaged_signal - hats[2]) / hats[1]
-      
-      #estimate peak range
-      mypeak_range <- find_ERP_range(standata, 1.7)
-      
-      #prepare data and starting values for optim
-      yis <- my_averaged_signal[mypeak_range]
-      peak_center_estimate = which.max(my_averaged_signal)
-      
-      pars <-optimise_ERP(mypeak_range, yis ,mysr = srate,pkcntr = peak_center_estimate)
-      if (abs(freq - pars$par[1]) <= freq * accuracy_window) {
-        ones=ones+ 1
-      }
-      
-    }
-    cat("\n Completed (no. trials): ",N)
-    p <- ones / averagingN
-    my_ps[N]<-p
-  }
-  return(my_ps)
-}
-
-#' @export
-power_determination_amp <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 100,averagingN=4)
+power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 100,averagingN=4)
 {
   set.seed("123")
-  my_ps <- c()
+  my_frequency_ps <- numeric(length=maxtrial)
+  my_amplitude_ps <- numeric(length=maxtrial)
   meanpower <- R.matlab::readMat("meanpower.mat")$meanpower
   for (N in 1:maxtrial)
   {
-    ones <- 0
+    freq_ones <- 0
+    amp_ones <- 0
     for (j in 1:averagingN)
     {
       #create sample data
@@ -254,14 +207,18 @@ power_determination_amp <-function(accuracy_window,freq,amp,frames,srate,maxtria
       peak_center_estimate = which(my_averaged_signal == max(my_averaged_signal))
       
       pars <-optimise_ERP(mypeak_range, yis ,mysr = srate,pkcntr = peak_center_estimate)
-      if (abs(amp - pars$par[2]) <= amp * accuracy_window) {
-        ones=ones+ 1
-      }
-      
+      if (abs(freq - pars$par[1]) <= freq * accuracy_window) 
+        freq_ones=freq_ones+ 1
+      if (abs(amp - pars$par[2]) <= amp * accuracy_window) 
+        amp_ones=amp_ones+ 1
     }
+    
     cat("\n Completed (no. trials): ",N)
-    p <- ones / averagingN
-    my_ps<-c(my_ps,p)
+    freq_p <- freq_ones / averagingN
+    amp_p <- amp_ones / averagingN
+    my_frequency_ps[N]<-freq_p
+    my_amplitude_ps[N]<-amp_p
   }
-  return(my_ps)
+  results<-data.frame(my_frequency_ps,my_amplitude_ps)
+  return(data.frame(results))
 }

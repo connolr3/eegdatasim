@@ -5,7 +5,9 @@
 Noise
 }
 \description{
-Generates Classicaly simulated Noise from an EEG signal
+Generates Classicaly simulated Noise from an EEG signal. Adapted from Matlab version.
+Functioanlity is the same, however it avoids O(N^2) time complexity of Matlab version, as R is not suited well to for loops. Uses apply and matrices instead.
+meanpower is read in at start in noise function, if not supplied by user.
 }
 \usage{
 noise(x)
@@ -47,25 +49,28 @@ Adapted from Yeung N,Bogacz R, Holroyd C, Nieuwenhuis S, Cohen J
 \examples{
 
 
-#noise <- function(frames, epochs, srate) {
- # sumsig = 50#number of sinusoids from which each simulated signal is composed of
-  ##signal <- matrix(0,1,epochs*frames)
-  #signal <- replicate(epochs * frames, 0)
-  #for (trial in 1:epochs) {
-   # freq = 0
-  #  signal_range <- c(((trial - 1) * frames + 1):(trial * frames))
-   # for (i in 1:sumsig) {
-    #  freq = freq + (4 * runif(1, 0, 1))
-     # freqamp = meanpower[min (ceiling(freq), 125)] / meanpower[1]#meanpower created up above from read-in file
-      phase <- runif(1, 0, 1) * 2 * pi
-  #    signal[signal_range] <-
-   #     signal[signal_range] + sin(c(1:frames) / srate * 2 * pi * freq + phase) * freqamp
-#
-#    }
-#  }
-#  signal
-#  return(signal)
-#}
+fill_signals<-function(mysignal,frames, epochs, srate,meanpower){
+  sumsig = 50#number of sinusoids from which each simulated signal is composed of
+  signal <- matrix( rep(1:frames, sumsig), nrow=sumsig, byrow=TRUE )
+  freq <- 4 * runif( sumsig, 0, 1)#generate random frequency for each sin
+  freq <- cumsum(freq)#apply cumilitive function to make each sin have a higher frequency than the last
+  freqamp <- meanpower[ pmin( ceiling(freq), rep(125,sumsig)) ] / meanpower[1]#generate ampltidue based on meanpower
+  phase <- 2 * pi * runif(sumsig, 0 , 1)#generate random phase for each sin
+  signal <- sin( signal * freq * ( 2 * pi / srate ) + phase ) * freqamp#create 50 sins, with consecutively higher freq for each sin 
+  mysignal<-colSums( signal ) 
+  
+}
+
+noise <- function(frames, epochs, srate, meanpower = NULL) {
+  if (frames < 0) stop("frames cannot be less than 0")
+  if (srate < 0) stop("srate cannot be less than 0")
+  if (epochs < 0) stop("epochs cannot be less than 0")
+  if( is.null(meanpower)) meanpower <- as.vector(R.matlab::readMat("meanpower.mat")$meanpower)
+  signals<-matrix(0,frames,epochs)
+  signals<-apply(signals,2,fill_signals,meanpower=meanpower,frames=frames,epochs=epochs,srate=srate)
+  return(as.vector(signals))
+}
+
 
 #mynoise<-noise(200,10,250)
 #plot(mynoise[1:200])

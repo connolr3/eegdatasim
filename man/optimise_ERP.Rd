@@ -5,17 +5,21 @@
 optimise_ERP
 }
 \description{
-optimise uses OPTIM package to find parameters of ERP that minimise the SSE... It is equivalemt to fitting a model to a time series, however our model is based on trigonemtric functions. uses min_sse function as the function to minimise.
+optimise uses OPTIM package to find parameters of ERP that minimise the SSE... Usually, using OPTIM in R is equivalemt to fitting a model to a time series. However our model is based on trigonemtric functions.
+
+optimise_ERP uses min_sse function as the function to minimise.
+It uses BFGS method to optimise. The gradient of the SSE is supplied also, which speeds up computation (gradient is the derivative of the SSE function).
+
+Altough optime_ERP estimate both amplitude and frequency..... the optimisation is only one-dimensional as the amplitude can be formed in terms of the freqeuncy. 
 }
 \usage{
 optimise_ERP(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dat}{averaged signal from which to estimae from}
-  \item{startingfrequency}{default=0, value for Optim to use as peak frequency starting value}
-  \item{starting_amp}{default=1, value for Optim to use as peak amplitude starting value}
-  \item{mysr}{Sampling Rate, in Hertz, used by experimenter}
+  \item{x}{x values from data we are fitting}
+  \item{y}{y values from data we are fitting}
+  \item{mysr}{Sampling Rate, in Hertz, used and knwon by experimenter}
   \item{pkcntr}{Index of peak center, if unknown please estimate with the which(max(dat))}
 }
 \details{
@@ -66,11 +70,9 @@ for R documentation on Optim Function
 # stan_signal<-(av_signal-hats[2])/hats[1]
 # erp_is<-find_ERP_range(stan_signal,cutoff=1.6)
 #
-# dat<-data.frame(x=erp_is,y=av_signal[erp_is])
 #
-# start_amp<-max(av_signal[erp_is])
 # peak_center_estimate=which(av_signal==max(av_signal))
-# pars<-optimise_ERP(dat,mysr=250,starting_amp = start_amp,pkcntr=peak_center_estimate)
+# pars<-optimise_ERP(erp_is,av_signal[erp_is],mysr=250,peak_center_estimate)
 #
 #
 # print(paste("estimating frequency as:", pars$par[1]))
@@ -80,16 +82,28 @@ for R documentation on Optim Function
 
 
 ## The function is currently defined as
-min_SSE<-function(data,par,srate,peakcenter){
-  #  pred_values<-(1+cos(2*pi*par[1]*(data["x"]-par[2])))/2
-  pred_values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
-  errs<-data["y"]-par[2]*pred_values
-  sum((errs)^2)
+gr_min_SSE <- function(par,x,y,srate,peakcenter){
+  u <- ((x-peakcenter)*2*pi)/srate
+  z <- cos( u * par[1] )
+  alphaest <- sum( z * y) / sum(z*z)
+  ans<-4*pi*alphaest*(x-peakcenter)*(y-alphaest*z)*(sin(u * par[1]))
+  return(sum(ans/srate))
+}
+
+min_SSE<-function(par,x,y,srate,peakcenter){
+  z <- cos(((x-peakcenter)*2*pi*par[1])/srate)
+  alphaest <- sum(z * y) / sum(z*z)
+  #pred_values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
+  errs<- y - alphaest * z #pred_values
+  sum(errs^2)
 }
 
 #' @export
-optimise_ERP<-function(dat,startingfrequency=0,starting_amp=1,mysr,pkcntr){
-  result <- optim(par = c(startingfrequency, starting_amp), fn = min_SSE, data = dat,srate=mysr,peakcenter=pkcntr)
+optimise_ERP<-function(x,y,mysr,pkcntr){
+  result <- optim(par = 1, fn = min_SSE, gr=gr_min_SSE, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
+  z <- cos(((x-pkcntr)*2*pi*result$par[1])/mysr )
+  alphaest <- sum(z * y) / sum(z*z)
+  result$par <- c((result$par),alphaest)
   return(result)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

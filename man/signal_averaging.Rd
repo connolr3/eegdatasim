@@ -5,7 +5,7 @@
 Signal Averaging 
 }
 \description{
-Averages Signal by iterating over entire vector. More efficient for smaller data.
+Averages Signal by reshaping as matrix, and obtaining mean of column sums.
 }
 \usage{
 signal_averaging(data,frames,epochs)
@@ -43,15 +43,10 @@ Rose Connolly connolr3@tcd.ie
 #plot_signal(a_signal,mark=115,title="Averaged Signal")
 
 ## The function is currently defined as
-#approach by summation
+
 signal_averaging<-function(data,frames,epochs){
-  average_signal<-rep(0,frames)
-  range<- c(1:frames)
-  for (i in c(1:epochs)) {
-    average_signal<-average_signal+data[range]
-    range<-range+frames
-  }
-  return(average_signal/epochs)
+  a <- matrix( data, nrow=frames, ncol=epochs )
+  return(rowMeans(a))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
