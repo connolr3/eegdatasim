@@ -1,5 +1,5 @@
-\name{signal_averaging}
-\alias{signal_averaging}
+\name{signal.averaging}
+\alias{signal.averaging}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Signal Averaging 
@@ -8,7 +8,7 @@ Signal Averaging
 Averages Signal by reshaping as matrix, and obtaining mean of column sums.
 }
 \usage{
-signal_averaging(data,frames,epochs)
+signal.averaging(data,frames,epochs)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -39,12 +39,12 @@ Rose Connolly connolr3@tcd.ie
 }
 \examples{
 # mysignal<-noise(200,10,250)+7*peak(200,10,250,7,115)
-#a_signal<-signal_averaging(mysignal,200,10)
-#plot_signal(a_signal,mark=115,title="Averaged Signal")
+#a_signal<-signal.averaging(mysignal,200,10)
+#plot.signal(a_signal,mark=115,title="Averaged Signal")
 
 ## The function is currently defined as
 
-signal_averaging<-function(data,frames,epochs){
+signal.averaging<-function(data,frames,epochs){
   a <- matrix( data, nrow=frames, ncol=epochs )
   return(rowMeans(a))
 }

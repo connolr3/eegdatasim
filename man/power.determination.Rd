@@ -1,5 +1,5 @@
-\name{power_determination}
-\alias{power_determination}
+\name{power.determination}
+\alias{power.determination}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Power Determination 
@@ -10,7 +10,7 @@ Obtains an estimate of bernoulli power based on monte carlo estimation.
 Obtains this power in terms of ERP frequency estimation, and ERP ampltide estimation.
 }
 \usage{
-power_determination(0.1,7,5,200,250,40,50)
+power.determination(0.1,7,5,200,250,40,50)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -44,12 +44,12 @@ Has a significant run-time.
 }
 \examples{
 #NOT RUN
-# my_ps<-power_determination(0.1,7,5,200,250,30,50)
-#plot(my_ps$my_frequency_ps,main="p estimates for 1 to 30 trials averaged over 50 simulations")
+# my.ps<-power.determination(0.1,7,5,200,250,30,50)
+#plot(my.ps$my_frequency_ps,main="p estimates for 1 to 30 trials averaged over 50 simulations")
 
 ## The function is currently defined as
 
-power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 40,averagingN=100)
+power.determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 40,averagingN=100)
 {
   set.seed("123")
   my_frequency_ps <- numeric(length=maxtrial)

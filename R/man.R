@@ -2,7 +2,7 @@
 usethis::use_package("R.matlab")
 
 #' @export
-plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
+plot.signal <- function(data, mark = NULL, title = "EEG Signal") {
   plot(data, main = title, type = "l")
   # this if statement and corresponding code is applicable for phase resetting theory only
   if (is.null(mark) == FALSE) {
@@ -12,7 +12,7 @@ plot_signal <- function(data, mark = NULL, title = "EEG Signal") {
 }
 
 
-fill_signals<-function(mysignal,frames, epochs, srate,meanpower){
+fill.signals<-function(mysignal,frames, epochs, srate,meanpower){
   sumsig = 50#number of sinusoids from which each simulated signal is composed of
   signal <- matrix( rep(1:frames, sumsig), nrow=sumsig, byrow=TRUE )
   freq <- 4 * runif( sumsig, 0, 1)#generate random frequency for each sin
@@ -60,7 +60,7 @@ noise <- function(frames, epochs, srate, meanpower = NULL) {
     )
   } 
   signals<-matrix(0,frames,epochs)
-  signals<-apply(signals,2,fill_signals,meanpower=meanpower,frames=frames,epochs=epochs,srate=srate)
+  signals<-apply(signals,2,fill.signals,meanpower=meanpower,frames=frames,epochs=epochs,srate=srate)
   return(as.vector(signals))
 }
 
@@ -117,8 +117,8 @@ phasereset <- function (frames,epochs,srate,minfr,maxfr,position = frames / 2,tj
 Makinen <- function(frames, epochs, srate, position = frames / 2) {
   signal <- replicate(epochs * frames, 0)#generating empty wave
   for (i in 1:4) {#repeat for 4 sinusoids
-    new_signal <- phasereset(frames, epochs, srate, 4, 16, position)
-    signal = signal + new_signal#add new sin to summation
+    new.signal <- phasereset(frames, epochs, srate, 4, 16, position)
+    signal = signal + new.signal#add new sin to summation
   }
   return(signal)
 }
@@ -128,20 +128,20 @@ Makinen <- function(frames, epochs, srate, position = frames / 2) {
 Makinen1a <- function() {
   trials = 30
   mysignal = Makinen (400, trials, 1000, 175)#30 trials
-  my_new_signal <- matrix(mysignal, nrow = 400, ncol = 30)#reshape into matrix
-  my_df <-as.data.frame(t(my_new_signal))#convert -> df to use a matlab plot
+  my.new.signal <- matrix(mysignal, nrow = 400, ncol = 30)#reshape into matrix
+  my.df <-as.data.frame(t(my.new.signal))#convert -> df to use a matlab plot
 
   par(mfrow = c(3, 1))
-  matplot(t(my_df), type = "l", ylab = "EEG")
-  signalmean <- lapply(my_df[1:400], FUN = mean)
+  matplot(t(my.df), type = "l", ylab = "EEG")
+  signalmean <- lapply(my.df[1:400], FUN = mean)
   plot( c(1:400),signalmean,type = "l",col = "blue",xlab = "",ylab = "ERP")
-  variance <- lapply(my_df[1:400], FUN = var)
+  variance <- lapply(my.df[1:400], FUN = var)
   plot(c(1:400),variance,type = "l",col = "blue",xlab = "")
   par(mfrow = c(1, 1))#reset par to normal
 }
 
 #' @export
-signal_averaging<-function(data,frames,epochs){
+signal.averaging<-function(data,frames,epochs){
   if (frames < 0) stop("frames cannot be less than 0")
   if (epochs < 0) stop("epochs cannot be less than 0")
   a <- matrix( data, nrow=frames, ncol=epochs )
@@ -149,13 +149,13 @@ signal_averaging<-function(data,frames,epochs){
 }
 
 #' @export
-estimate_amplitude<-function(averaged_signal){
+estimate.amplitude<-function(averaged_signal){
   if(is.vector(averaged_signal)==FALSE | is.numeric(averaged_signal)==FALSE) stop("averaged_signal must be in vector form")
   return(max(averaged_signal))
 }
 
 #' @export
-est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
+est.sig.hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
   if (peak_position < 0 | peak_position>length(data)) stop(paste("peak_position must be in range [0,"),frames,"].")
   if(buffer_pc>0.5)stop("buffer_pc is too large. Choose a value <0.45")
   
@@ -169,7 +169,7 @@ est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
 }
 
 #' @export
-find_ERP_range<-function(data,cutoff=2){
+find.ERP.range<-function(data,cutoff=2){
   if (cutoff < 0) stop("cutoff cannot be less than 0")
   z <- abs(data)
   z <- z - cutoff
@@ -177,12 +177,12 @@ find_ERP_range<-function(data,cutoff=2){
   
   zi <- z > 0
   
-  left_side <- rev( zi[1:index] )
-  t <- which( left_side == FALSE )
+  left.side <- rev( zi[1:index] )
+  t <- which( left.side == FALSE )
   low <- index - min(t) + 1
   
-  right_side <- zi[index:length(data)]
-  t <- which( right_side == FALSE )
+  right.side <- zi[index:length(data)]
+  t <- which( right.side == FALSE )
   high <- index + min(t) - 1
 
   return( low:high )
@@ -190,7 +190,7 @@ find_ERP_range<-function(data,cutoff=2){
 
 #plots signal with erp highlighted in red
 #' @export
-plot_erp<-function(signal,erp_range){
+plot.erp<-function(signal,erp_range){
   x_values<-c(1:length(signal))
   point_colour<-replicate(length(signal),"black")
   point_colour[erp_range]<-"red"
@@ -198,7 +198,7 @@ plot_erp<-function(signal,erp_range){
   plot(x_values,signal,col=point_colour,main="Signal with ERP identified")
 }
 
-gr_min_SSE <- function(par,x,y,srate,peakcenter){
+gr.min.SSE <- function(par,x,y,srate,peakcenter){
   u <- ((x-peakcenter)*2*pi)/srate
   z <- cos( u * par[1] )
   alphaest <- sum( z * y) / sum(z*z)
@@ -206,19 +206,19 @@ gr_min_SSE <- function(par,x,y,srate,peakcenter){
   return(sum(ans/srate))
 }
 
-min_SSE<-function(par,x,y,srate,peakcenter){
+min.SSE<-function(par,x,y,srate,peakcenter){
   z <- cos(((x-peakcenter)*2*pi*par[1])/srate)
   alphaest <- sum(z * y) / sum(z*z)
-  #pred_values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
-  errs<- y - alphaest * z #pred_values
+  #pred.values<-cos(((data["x"]-peakcenter)*2*pi*par[1])/srate)
+  errs<- y - alphaest * z #pred.values
   sum(errs^2)
 }
 
 #' @export
-optimise_ERP<-function(x,y,mysr,pkcntr){
+optimise.ERP<-function(x,y,mysr,pkcntr){
   if(length(x)!=length(y))stop("lengths of x and y must equal")
   if(is.element(pkcntr,x)==FALSE)stop("x must contain peak centre")
-  result <- optim(par = 1, fn = min_SSE, gr=gr_min_SSE, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
+  result <- optim(par = 1, fn = min.SSE, gr=gr.min.SSE, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
   z <- cos(((x-pkcntr)*2*pi*result$par[1])/mysr )
   alphaest <- sum(z * y) / sum(z*z)
   result$par <- c((result$par),alphaest)
@@ -226,7 +226,7 @@ optimise_ERP<-function(x,y,mysr,pkcntr){
 }
 
 #' @export
-power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 40,averagingN=100)
+power.determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 40,averagingN=100)
 {
   if (freq < 0) stop("freq cannot be less than 0")
   if (amp < 0) stop("amp cannot be less than 0")
@@ -276,18 +276,18 @@ power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 
       mysignal <-noise(frames, N, 250, meanpower=meanpower) + amp * peak(frames, N, srate, freq)
       
       #prepare signal: average and standardise
-      my_averaged_signal <- signal_averaging(mysignal, frames, N)
-      hats <- est_sig_hat(my_averaged_signal, frames / 2)
+      my_averaged_signal <- signal.averaging(mysignal, frames, N)
+      hats <- est.sig.hat(my_averaged_signal, frames / 2)
       standata <- (my_averaged_signal - hats[2]) / hats[1]
       
       #estimate peak range
-      mypeak_range <- find_ERP_range(standata, 1.7)
+      mypeak_range <- find.ERP.range(standata, 1.7)
       
       #prepare data and starting values for optim
       yis <- my_averaged_signal[mypeak_range]
       peak_center_estimate = which(my_averaged_signal == max(my_averaged_signal))
       
-      pars <-optimise_ERP(mypeak_range, yis ,mysr = srate,pkcntr = peak_center_estimate)
+      pars <-optimise.ERP(mypeak_range, yis ,mysr = srate,pkcntr = peak_center_estimate)
       if (abs(freq - pars$par[1]) <= freq * accuracy_window) 
         freq_ones=freq_ones+ 1
       if (abs(amp - pars$par[2]) <= amp * accuracy_window) 
