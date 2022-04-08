@@ -69,6 +69,8 @@ peak <- function(frames, epochs,srate,peakfr,position = frames / 2,tjitter = 0,w
   if (frames < 0) stop("frames cannot be less than 0")
   if (srate < 0) stop("srate cannot be less than 0")
   if (epochs < 0) stop("epochs cannot be less than 0")
+  if (position < 0 | position>frames) stop("position must be in range 0:frames")
+  
   mypeak <- c(1, 5, 4, 9, 0)
   signal <- replicate(epochs * frames, 0)
   for (trial in 1:epochs) {
@@ -88,6 +90,14 @@ peak <- function(frames, epochs,srate,peakfr,position = frames / 2,tjitter = 0,w
 #' @export
 phasereset <- function (frames,epochs,srate,minfr,maxfr,position = frames / 2,tjitter = 0) 
   {
+    if (frames < 0) stop("frames cannot be less than 0")
+    if (srate < 0) stop("srate cannot be less than 0")
+    if (epochs < 0) stop("epochs cannot be less than 0")
+    if (minfr < 0) stop("frequency cannot be less than 0")
+    if (maxfr < 0) stop("frequency cannot be less than 0")
+    if (position < 0 | position>frames) stop(paste("position must be in range [0,"),frames,"].")
+  
+  
     signal <- replicate(epochs * frames, 0)#generating empty wave
     for (trial in 1:epochs) {
       wavefr = runif(1, 0, 1) * (maxfr - minfr) + minfr
@@ -132,17 +142,23 @@ Makinen1a <- function() {
 
 #' @export
 signal_averaging<-function(data,frames,epochs){
+  if (frames < 0) stop("frames cannot be less than 0")
+  if (epochs < 0) stop("epochs cannot be less than 0")
   a <- matrix( data, nrow=frames, ncol=epochs )
   return(rowMeans(a))
 }
 
 #' @export
 estimate_amplitude<-function(averaged_signal){
+  if(is.vector(averaged_signal)==FALSE | is.numeric(averaged_signal)==FALSE) stop("averaged_signal must be in vector form")
   return(max(averaged_signal))
 }
 
 #' @export
 est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
+  if (peak_position < 0 | peak_position>length(data)) stop(paste("peak_position must be in range [0,"),frames,"].")
+  if(buffer_pc>0.5)stop("buffer_pc is too large. Choose a value <0.45")
+  
   lo<-peak_position-(buffer_pc*length(data))
   hi<-peak_position+(buffer_pc*length(data))
   buffer_range<-floor(lo):floor(hi)
@@ -154,6 +170,7 @@ est_sig_hat<-function(data, peak_position=which.max(abs(data)),buffer_pc=0.3){
 
 #' @export
 find_ERP_range<-function(data,cutoff=2){
+  if (cutoff < 0) stop("cutoff cannot be less than 0")
   z <- abs(data)
   z <- z - cutoff
   index<-which.max( z )
@@ -199,6 +216,8 @@ min_SSE<-function(par,x,y,srate,peakcenter){
 
 #' @export
 optimise_ERP<-function(x,y,mysr,pkcntr){
+  if(length(x)!=length(y))stop("lengths of x and y must equal")
+  if(is.element(pkcntr,x)==FALSE)stop("x must contain peak centre")
   result <- optim(par = 1, fn = min_SSE, gr=gr_min_SSE, x=x, y=y,srate=mysr,peakcenter=pkcntr, method="BFGS")
   z <- cos(((x-pkcntr)*2*pi*result$par[1])/mysr )
   alphaest <- sum(z * y) / sum(z*z)
@@ -209,6 +228,15 @@ optimise_ERP<-function(x,y,mysr,pkcntr){
 #' @export
 power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 40,averagingN=100)
 {
+  if (freq < 0) stop("freq cannot be less than 0")
+  if (amp < 0) stop("amp cannot be less than 0")
+  if (frames < 0) stop("frames cannot be less than 0")
+  if (srate < 0) stop("srate cannot be less than 0")
+  if (maxtrial < 0) stop("maxtrial cannot be less than 0")
+  if (averagingN < 0) stop("averagingN cannot be less than 0")
+  if (averagingN > 1000) stop("averagingN is too large")
+  if (maxtrial > 1000) stop("maxtrial is too large")
+  if (accuracy_window > 1 | accuracy_window<0) stop("accuracy_window should be in range[0,1]")
   set.seed("123")
   my_frequency_ps <- numeric(length=maxtrial)
   my_amplitude_ps <- numeric(length=maxtrial)
@@ -238,7 +266,7 @@ power_determination <-function(accuracy_window,freq,amp,frames,srate,maxtrial = 
                  ,0.0001177806 ,0.0001195453 ,0.0001210516 ,0.0001182723 ,0.0001175911
                  ,0.0001172347 ,0.0001172174 ,0.0001188854 ,0.0001175014 ,0.0001183316
   )
-  for (N in 1:maxtrial)
+  for (N in 2:maxtrial)
   {
     freq_ones <- 0
     amp_ones <- 0
