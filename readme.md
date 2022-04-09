@@ -1,17 +1,17 @@
 EEGDataSim 
 R version of https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator 
-+ additional functionality
+with additional functionality
 __________________
 DEPENDENCIES
 
 The following packages are required for eegdatasim;
-install.packages("R.matlab")
-install.packages("devtools")   - required for testing only
++ install.packages("R.matlab")
++ install.packages("devtools")   - required for testing only
 __________________
 INSTALLATION
 
 To install this package run:
-devtools::install_github("connolr3/eegdatasim")
++ devtools::install_github("connolr3/eegdatasim")
 __________________
 SHINY APP
 
@@ -21,4 +21,4 @@ __________________
 TESTING
 
 Test file (testthat.R) is included in tests folder. Navigate to test file in RStudio, ensure working directory is set to tests folder and run;
-devtools::test()
++ devtools::test()
